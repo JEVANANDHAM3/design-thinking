@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-const LotteryForm = ({train , second}) => {
+const LotteryForm = ({train , second, fn}) => {
   // Mock train details matching the provided database schema
   const trainDetails =train
   const { data : session } = useSession()
@@ -113,7 +113,7 @@ const LotteryForm = ({train , second}) => {
              <Clock size={14} className="animate-pulse duration-1000" />
              <span>Lottery Closes In</span>
            </div>
-           <TimerBasic second={second} />
+           <TimerBasic second={second} fn={fn}/>
          </div>
 
          <div className="mb-10 flex flex-col items-center text-center">

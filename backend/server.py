@@ -396,7 +396,7 @@ async def getTime(journey_id: int, session: Session = Depends(get_session)):
             print(diff)
             return {
                 'ok': True,
-                'seconds': diff.total_seconds(),
+                'seconds': diff.total_seconds()+2,
                 'status': 'opening',
             }
 
@@ -409,11 +409,10 @@ async def getTime(journey_id: int, session: Session = Depends(get_session)):
 
         # Currently open
         diff = (closing_dt - now)
-        print(f'{diff=}')
 
         return {
             'ok': True,
-            'seconds': diff.total_seconds(),
+            'seconds': diff.total_seconds()+2,
             'status': 'open',
         }
 

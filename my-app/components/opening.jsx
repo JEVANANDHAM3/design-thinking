@@ -5,7 +5,8 @@ import TimerBasic from '@/components/timer';
 const WindowOpening = ({
   title = "Booking Window Opens Soon",
   message = "Hold tight! The lottery window for this train will open shortly.",
-  second
+  second,
+  fn
 }) => {
   return (
     <div className="w-full max-w-2xl mx-auto my-12 relative flex flex-col items-center justify-center p-8 md:p-12 overflow-hidden bg-white/70 backdrop-blur-xl border border-indigo-100 rounded-3xl shadow-2xl shadow-indigo-900/10 hover:shadow-indigo-900/20 transition-all duration-500 ease-out group z-0">
@@ -37,7 +38,7 @@ const WindowOpening = ({
         {/* The Timer Wrapper */}
         <div className="bg-white/80 border border-slate-100 shadow-[0_4px_20px_-5px_rgba(0,0,0,0.05)] rounded-2xl px-8 py-5 flex flex-col items-center gap-1">
           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Window opens in</span>
-          <TimerBasic second={second}/>
+          <TimerBasic second={second} fn={fn}/>
         </div>
         
       </div>

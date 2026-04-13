@@ -14,7 +14,7 @@ import { preconnect } from 'react-dom'
 import { da } from 'date-fns/locale'
 
 
-const page = () => {
+const page =  () => {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -92,11 +92,7 @@ const page = () => {
       }
       setLoading(false)
     }
-    if (opening === 'closed') return
-    if (opening !== 'closed'){
-      const interval = setInterval(fetchTime, 5000)
-      return () => clearInterval(interval)
-    }
+    fetchTime()
   }, [opening,journey_id])
 
   useEffect(()=>{
@@ -104,6 +100,31 @@ const page = () => {
       setSeconds(res.seconds)
     }
   },[opening])
+
+    const fetchTime = async () => {
+      const query = new URLSearchParams({
+        journey_id: journey_id,
+      })
+      const url = process.env.NEXT_PUBLIC_BACKEND_URL + `/get_time?${query.toString()}`
+      try {
+        const response = await fetch(url, {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session?.accessToken}`
+          }
+        })
+        const data = await response.json()
+        console.log(data)
+        if (data.ok) {
+          setOpening(data.status)
+          setRes(data)
+        }
+
+      } catch (err) {
+        console.error(err)
+      }
+      setLoading(false)
+    }
 
   return (
     <div className='p-3'>
@@ -113,12 +134,12 @@ const page = () => {
         ) :
       status ? (
         opening === 'opening' ? (
-          <WindowOpening second={seconds}/>
+          <WindowOpening second={seconds} fn={fetchTime}/>
         ):(
           opening === 'closed'? (
             <WindowClosed/>
           ):(
-            <LotteryForm train={train} second={seconds}/>
+            <LotteryForm train={train} second={seconds} fn={fetchTime}/>
           )
         )
       ) :

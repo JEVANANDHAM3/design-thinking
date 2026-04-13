@@ -1,7 +1,7 @@
 import { Timer } from "@ark-ui/react/timer";
 import { Pause, Play, RotateCcw } from "lucide-react";
 
-export default function TimerBasic({ second}) {
+export default function TimerBasic({ second, fn}) {
   // Ark UI Timer crashes if startMs is exactly 0 in countdown mode without a target.
   // Using Math.max guarantees it will always be strictly > 0 (1ms will just instantly complete resolving the UI accurately).
   const startMs = Math.max(second,1)*1000;
@@ -13,6 +13,7 @@ export default function TimerBasic({ second}) {
       autoStart
       countdown
       startMs={startMs}
+      onComplete={fn}
       className="inline-flex items-center justify-center"
     >
       <Timer.Area className="flex items-center gap-0.5 text-3xl font-black font-mono text-slate-800 tracking-tight">
