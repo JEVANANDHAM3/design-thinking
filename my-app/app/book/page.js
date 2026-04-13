@@ -14,7 +14,7 @@ import { preconnect } from 'react-dom'
 import { da } from 'date-fns/locale'
 
 
-const page =  () => {
+const page = () => {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -22,131 +22,92 @@ const page =  () => {
   const from_station = searchParams.get('from_station')
   const to_station = searchParams.get('to_station')
 
-  const { data : session } = useSession()
+  const { data: session, status: authStatus } = useSession()
 
-  const [status, setStatus] = useState(false)
-  const [loading,setLoading] = useState(true)
+  const [hasTrain, setHasTrain] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [train, setTrain] = useState(null)
 
   const [opening, setOpening] = useState(null)
   const [seconds, setSeconds] = useState(null)
   const [res, setRes] = useState(null)
 
-  useEffect(() => {
-    const query = new URLSearchParams({
-      journey_id: journey_id,
-      from_station: from_station,
-      to_station: to_station
-    })
+  // Stable fetch function
+  const fetchData = async () => {
+    if (!journey_id || authStatus !== 'authenticated') return
 
-    const url = process.env.NEXT_PUBLIC_BACKEND_URL + `/one_train?${query.toString()}`
-
-
-    const fetchtrain = async () =>{
-      const response = await fetch(
-        url,{
-          headers:{
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session?.accessToken}`
-          }
-        }
-      )
-      const data = await response.json()
-
-      if (data.ok){
-        data.train.journey_id = journey_id
-        setTrain(data.train)
-        setStatus(true)
-      }
-    }
-
-    fetchtrain()
-
-  },[])
-
-
-  useEffect(() => {
-    if (!journey_id) return
-
-    const fetchTime = async () => {
+    try {
       const query = new URLSearchParams({
         journey_id: journey_id,
+        from_station: from_station || '',
+        to_station: to_station || ''
       })
-      const url = process.env.NEXT_PUBLIC_BACKEND_URL + `/get_time?${query.toString()}`
-      try {
-        const response = await fetch(url, {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session?.accessToken}`
-          }
-        })
-        const data = await response.json()
-        console.log(data)
-        if (data.ok) {
-          setOpening(data.status)
-          setRes(data)
-        }
 
-      } catch (err) {
-        console.error(err)
+      // Fetch Train Details
+      const trainUrl = process.env.NEXT_PUBLIC_BACKEND_URL + `/one_train?${query.toString()}`
+      const trainRes = await fetch(trainUrl, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.accessToken}`
+        }
+      })
+      const trainData = await trainRes.json()
+
+      if (trainData.ok) {
+        trainData.train.journey_id = journey_id
+        setTrain(trainData.train)
+        setHasTrain(true)
+      } else {
+        setHasTrain(false)
       }
+
+      // Fetch Lottery Timing
+      const timeUrl = process.env.NEXT_PUBLIC_BACKEND_URL + `/get_time?${new URLSearchParams({ journey_id }).toString()}`
+      const timeRes = await fetch(timeUrl, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session?.accessToken}`
+        }
+      })
+      const timeData = await timeRes.json()
+
+      if (timeData.ok) {
+        setOpening(timeData.status)
+        setRes(timeData)
+        if (timeData.status === 'opening' || timeData.status === 'open') {
+          setSeconds(timeData.seconds)
+        }
+      }
+    } catch (err) {
+      console.error("Failed to fetch booking page data:", err)
+    } finally {
       setLoading(false)
     }
-    fetchTime()
-  }, [opening,journey_id])
+  }
 
-  useEffect(()=>{
-    if (opening === 'opening' || opening === 'open'){
-      setSeconds(res.seconds)
-    }
-  },[opening])
-
-    const fetchTime = async () => {
-      const query = new URLSearchParams({
-        journey_id: journey_id,
-      })
-      const url = process.env.NEXT_PUBLIC_BACKEND_URL + `/get_time?${query.toString()}`
-      try {
-        const response = await fetch(url, {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session?.accessToken}`
-          }
-        })
-        const data = await response.json()
-        console.log(data)
-        if (data.ok) {
-          setOpening(data.status)
-          setRes(data)
-        }
-
-      } catch (err) {
-        console.error(err)
-      }
+  useEffect(() => {
+    if (authStatus === 'authenticated') {
+      fetchData()
+    } else if (authStatus === 'unauthenticated') {
       setLoading(false)
     }
+  }, [authStatus, journey_id])
+
+  if (loading) return <div className="p-3"><Loading /></div>
+
+  if (!hasTrain) return <div className="p-3"><NotFound /></div>
 
   return (
     <div className='p-3'>
-      {
-        loading ? (
-          <Loading/>
-        ) :
-      status ? (
-        opening === 'opening' ? (
-          <WindowOpening second={seconds} fn={fetchTime}/>
-        ):(
-          opening === 'closed'? (
-            <WindowClosed/>
-          ):(
-            <LotteryForm train={train} second={seconds} fn={fetchTime}/>
-          )
-        )
-      ) :
-      (
-        <NotFound/>
-      )
-    }
+      {opening === 'opening' ? (
+        <WindowOpening second={seconds} fn={fetchData} />
+      ) : opening === 'closed' ? (
+        <WindowClosed />
+      ) : opening === 'open' ? (
+        <LotteryForm train={train} second={seconds} fn={fetchData} />
+      ) : (
+        <Loading />
+      )}
     </div>
   )
 }

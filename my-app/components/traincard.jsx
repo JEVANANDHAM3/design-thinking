@@ -110,9 +110,15 @@ const TrainCard = ({ train, bnFunction, bnName, result }) => {
                   Published Successfully
                 </div>
               ) : result !== 1 ? (
-                <Button className="w-full md:w-32 bg-indigo-600 hover:bg-indigo-700 text-white shadow-md hover:shadow-lg transition-all font-bold h-10" onClick={handleClick}>
-                  {name}
-                </Button>
+                trainDetails.published ? (
+                    <div className="text-sm font-bold text-slate-500 bg-slate-100 px-4 py-2 mt-1 rounded-lg border border-slate-200 text-center shadow-sm w-full md:w-32 h-10 flex items-center justify-center">
+                        Lottery Closed
+                    </div>
+                ) : (
+                    <Button className="w-full md:w-32 bg-indigo-600 hover:bg-indigo-700 text-white shadow-md hover:shadow-lg transition-all font-bold h-10 mt-1" onClick={handleClick}>
+                    {name}
+                    </Button>
+                )
               ) : (
                 <Button 
                   className="w-full md:w-32 bg-indigo-600 hover:bg-indigo-700 text-white shadow-md hover:shadow-lg transition-all font-bold h-10" 

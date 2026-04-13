@@ -1,6 +1,6 @@
-from backend import model
-from backend.model.user import User
-from backend.model.booking import Booking
+import model
+from model.user import User
+from model.booking import Booking
 def segregate_user(users ,booking):
     b = {
         'economy': [],

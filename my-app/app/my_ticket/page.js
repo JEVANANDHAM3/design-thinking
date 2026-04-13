@@ -17,7 +17,7 @@ export default function MyTicket() {
   useEffect(() => {
     const fetchTrian = async () => {
       const query = new URLSearchParams({
-        email: session?.user.email
+        email: session?.user?.email
       })
       const res = await fetch(process.env.NEXT_PUBLIC_BACKEND_URL + '/my_ticket?' + query.toString(), {
         method: 'GET',
