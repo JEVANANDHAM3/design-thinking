@@ -91,15 +91,17 @@ async def lifespan(app:FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-origins = [
-    str(os.getenv('FRONTEND_URL')),
-]
+frontend_urls_env = os.getenv('FRONTEND_URL', '')
+origins = [url.strip() for url in frontend_urls_env.split(',') if url.strip()]
+
+if not origins:
+    origins = ["http://localhost:3000"]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE"],  
+    allow_methods=["*"],  
     allow_headers=["*"],   
 )
 
