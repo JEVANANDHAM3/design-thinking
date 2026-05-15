@@ -17,7 +17,7 @@ import { Shield, Timer, CheckCircle2, AlertTriangle, XCircle, Lock, ArrowLeft } 
  * Displays fare breakdown, countdown timer, trust badges,
  * and Razorpay checkout integration with full error handling.
  */
-const PaymentPage = () => {
+const PaymentPageContent = () => {
   const searchParams = useSearchParams()
   const router = useRouter()
   const { data: session, status } = useSession()
@@ -472,5 +472,12 @@ const PaymentPage = () => {
   )
 }
 
-export default PaymentPage
+const PaymentPage = () => {
+  return (
+    <React.Suspense fallback={<Loading />}>
+      <PaymentPageContent />
+    </React.Suspense>
+  )
+}
 
+export default PaymentPage

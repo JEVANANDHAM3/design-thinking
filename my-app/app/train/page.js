@@ -9,7 +9,9 @@ import { useSession } from "next-auth/react";
 import { Truck } from "lucide-react";
 
 
-export default function SearchTrain() {
+import { Suspense } from "react"
+
+function SearchTrainContent() {
     const { data: session, status } = useSession()
     const searchParams = useSearchParams()
     const [trainResults, setTrainResults] = useState([]);
@@ -87,5 +89,13 @@ export default function SearchTrain() {
                 )}
             </div>
         </div>
+    )
+}
+
+export default function SearchTrain() {
+    return (
+        <Suspense fallback={<Loading />}>
+            <SearchTrainContent />
+        </Suspense>
     )
 }

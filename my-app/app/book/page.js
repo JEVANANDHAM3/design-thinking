@@ -14,7 +14,7 @@ import { preconnect } from 'react-dom'
 import { da } from 'date-fns/locale'
 
 
-const page = () => {
+const PageContent = () => {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -109,6 +109,14 @@ const page = () => {
         <Loading />
       )}
     </div>
+  )
+}
+
+const page = () => {
+  return (
+    <React.Suspense fallback={<div className="p-3"><Loading /></div>}>
+      <PageContent />
+    </React.Suspense>
   )
 }
 
