@@ -159,23 +159,59 @@ async def addTrain(train: Journey, session: Session = Depends(get_session)):
 
 @app.get('/get_trains')
 async def getTrains(from_station: str, to_station: str,date: date, session: Session = Depends(get_session)):
+    # try: 
+    #     publish_records = session.exec(select(model.Publish)).all()
+    #     journeys = []
+    #     for publish in publish_records:
+    #         itrian = session.exec(
+    #             select(Journey).where(
+    #                 Journey.id == publish.journey_id, 
+    #                 Journey.departure_date == date,
+    #                 Journey.from_station.ilike(from_station), 
+    #                 Journey.to_station.ilike(to_station)
+    #             )
+    #         ).first()
+    #         print('#'*10)
+    #         print(itrian)
+    #         print('#'*10)
+    #         if itrian:
+    #             train_dict = itrian.model_dump() if hasattr(itrian, 'model_dump') else itrian.dict()
+    #             train_dict['published'] = publish.published
+    #             journeys.append(train_dict)
+        
+    #     if len(journeys) == 0:
+    #         return {
+    #         'ok': True,
+    #         'journeys': []
+    #         }
+    #     return {
+    #         'ok': True,  
+    #         'journeys': journeys
+    #     }
+    # except Exception as e:
+    #     return {
+    #         'ok': False,
+    #         'message': str(e)
+    #     }
+
     try: 
-        publish_records = session.exec(select(model.Publish)).all()
+        un_published_trains = session.exec(
+            select(model.Publish).where(model.Publish.published == False)
+        ).all()
         journeys = []
-        for publish in publish_records:
+        print(un_published_trains)
+        for journey in un_published_trains:
             itrian = session.exec(
                 select(Journey).where(
-                    Journey.id == publish.journey_id, 
+                    Journey.id == journey.journey_id, 
                     Journey.departure_date == date,
-                    Journey.from_station.ilike(from_station), 
-                    Journey.to_station.ilike(to_station)
+                    Journey.from_station.ilike(f"%{from_station.strip()}%"), 
+                    Journey.to_station.ilike(f"%{to_station.strip()}%")
                 )
             ).first()
             if itrian:
-                train_dict = itrian.model_dump() if hasattr(itrian, 'model_dump') else itrian.dict()
-                train_dict['published'] = publish.published
-                journeys.append(train_dict)
-        
+                journeys.append(itrian)
+        print(journeys)
         if len(journeys) == 0:
             return {
             'ok': True,
@@ -293,8 +329,9 @@ async def publishLottery(journey_id: int, session: Session = Depends(get_session
             for b in booking:
                 user = session.exec(
                     select(model.User).where(model.User.email == b.user_email)
-                ).one()
-                users.append(user)
+                ).first()  # .first() returns None instead of raising NoResultFound
+                if user:
+                    users.append(user)
             
             seg_user = segregate_user(users,booking)
 
@@ -404,31 +441,27 @@ async def unPublishedTrains(session: Session = Depends(get_session)):
         }
 @app.get('/my_ticket')
 async def myTicket(email:str, session: Session = Depends(get_session)):
-
     try:
         print(email)
-        booking = session.exec(
+        bookings = session.exec(
             select(model.Booking).where(model.Booking.user_email == email)
         ).all()
+        
         trains = []
-        print(booking)
-        if booking:
-            for b in booking:
+        valid_bookings = []
+        
+        if bookings:
+            for b in bookings:
                 train = session.exec(
                     select(Journey).where(Journey.id == b.journey_id)
-                ).one() 
+                ).first() 
                 if train:
                     trains.append(train)
-            print(
-                {
-                    'ok': True,
-                    'booking': booking,
-                    'trains': trains
-                }
-            )
+                    valid_bookings.append(b)
+            
             return {
                 'ok': True,
-                'booking': booking,
+                'booking': valid_bookings,
                 'trains': trains
             }
         return {
@@ -436,6 +469,8 @@ async def myTicket(email:str, session: Session = Depends(get_session)):
             'message': 'Booking not found'
         }
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return {
             'ok': False,
             'message': str(e)

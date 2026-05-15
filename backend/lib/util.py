@@ -13,7 +13,8 @@ def segregate_user(users ,booking):
         'first': []
     }
     for book in booking:
-        b[book.seat_class.value].append(book.user_email)
+        seat_key = book.seat_class.value if hasattr(book.seat_class, 'value') else book.seat_class
+        b[seat_key].append(book.user_email)
     for user in users:
         if user.email in b['economy']:
             u['economy'].append(user)

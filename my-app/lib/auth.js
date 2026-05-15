@@ -16,31 +16,7 @@ export const authOptions = {
   },
   callbacks: {
     async signIn({user, account, token}) {
-      // Insert the user in the database if they don't exist
-      const {email, name} = user
-      console.log('signin callback is called')
-      const payload = {
-        name: name,
-        email: email,
-      }
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/add_user`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${account?.access_token}`,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) {
-        throw new Error('Failed to add user to database');
-      }
-
-      const data = await res.json()
-      user.DBIB = data.user_id
-
       return true
-
     },
 
     async jwt({token, user, account}) {
@@ -49,7 +25,28 @@ export const authOptions = {
         token.id = user.id
         token.name = user.name
         token.email = user.email
-        token.DBID = user.DBIB
+        
+        try {
+          const payload = {
+            name: user.name,
+            email: user.email,
+          }
+          const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/add_user`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.ok) {
+              token.DBID = data.user_id;
+            }
+          }
+        } catch (e) {
+          console.error("Failed to add/fetch user from DB:", e);
+        }
       }
       // Get access token from account object (not user)
       if (account) {
