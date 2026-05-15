@@ -9,7 +9,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { Field, FieldGroup } from "@/components/ui/field"
 import { signIn } from "next-auth/react"
 
 export function LoginForm({
@@ -31,8 +30,8 @@ export function LoginForm({
         </CardHeader>
         <CardContent>
           <form>
-            <FieldGroup>
-              <Field>
+            <div className="grid gap-4">
+              <div className="grid gap-2">
                 <Button variant="outline" type="button" onClick={handleClick}>
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                     <path
@@ -41,8 +40,8 @@ export function LoginForm({
                   </svg>
                   Continue with Google
                 </Button>
-              </Field>
-            </FieldGroup>
+              </div>
+            </div>
           </form>
         </CardContent>
       </Card>
